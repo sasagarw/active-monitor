@@ -16,6 +16,7 @@ limitations under the License.
 package controllers
 
 import (
+	"context"
 	"github.com/go-logr/logr"
 	"k8s.io/client-go/rest"
 	"path/filepath"
@@ -110,7 +111,7 @@ func StartTestManager(mgr manager.Manager) (chan struct{}, *sync.WaitGroup) {
 	go func() {
 		wg.Add(1)
 		//mgr.Start(stop)
-		Expect(mgr.Start(stop)).ToNot(HaveOccurred())
+		Expect(mgr.Start(context.TODO())).ToNot(HaveOccurred())
 		wg.Done()
 	}()
 	return stop, wg

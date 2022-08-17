@@ -114,8 +114,7 @@ func NewHealthCheckReconciler(mgr manager.Manager, log logr.Logger, MaxParallel 
 // +kubebuilder:rbac:groups=argoproj.io,resources=workflow;workflows;workflowtasksets,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile per kubebuilder v2 pattern
-func (r *HealthCheckReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
-	ctx := context.Background()
+func (r *HealthCheckReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues(hcKind, req.NamespacedName)
 	log.Info("Starting HealthCheck reconcile for ...")
 
@@ -551,7 +550,7 @@ func (r *HealthCheckReconciler) watchWorkflowReschedule(ctx context.Context, req
 		now = metav1.Time{Time: time.Now()}
 		// grab workflow object by name and check its status; update healthcheck accordingly
 		// do this once per second until the workflow reaches a terminal state (success/failure)
-		workflow, err := r.DynClient.Resource(wfGvr).Namespace(wfNamespace).Get(wfName, metav1.GetOptions{})
+		workflow, err := r.DynClient.Resource(wfGvr).Namespace(wfNamespace).Get(context.TODO(), wfName, metav1.GetOptions{})
 		if err != nil {
 			// if the workflow wasn't found, it is most likely the case that its parent healthcheck was deleted
 			// we can swallow this error and simply not reschedule
@@ -733,7 +732,7 @@ func (r *HealthCheckReconciler) watchRemedyWorkflow(ctx context.Context, req ctr
 		now = metav1.Time{Time: time.Now()}
 		// grab workflow object by name and check its status; update healthcheck accordingly
 		// do this once per second until the workflow reaches a terminal state (success/failure)
-		workflow, err := r.DynClient.Resource(wfGvr).Namespace(wfNamespace).Get(wfName, metav1.GetOptions{})
+		workflow, err := r.DynClient.Resource(wfGvr).Namespace(wfNamespace).Get(context.TODO(), wfName, metav1.GetOptions{})
 		if err != nil {
 			// if the workflow wasn't found, it is most likely the case that its parent healthcheck was deleted
 			// we can swallow this error and simply not reschedule
@@ -1024,7 +1023,7 @@ func (r *HealthCheckReconciler) parseRemedyWorkflowFromHealthcheck(log logr.Logg
 
 // Create ServiceAccount
 func (r *HealthCheckReconciler) createServiceAccount(clientset kubernetes.Interface, name string, namespace string) (string, error) {
-	sa, err := clientset.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+	sa, err := clientset.CoreV1().ServiceAccounts(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	// If a service account already exists just re-use it
 	if err == nil {
 		return sa.Name, nil
@@ -1041,7 +1040,7 @@ func (r *HealthCheckReconciler) createServiceAccount(clientset kubernetes.Interf
 		},
 	}
 
-	sa, err = clientset.CoreV1().ServiceAccounts(namespace).Create(sa)
+	sa, err = clientset.CoreV1().ServiceAccounts(namespace).Create(context.TODO(), sa, metav1.CreateOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -1051,13 +1050,13 @@ func (r *HealthCheckReconciler) createServiceAccount(clientset kubernetes.Interf
 
 //Delete a service Account
 func (r *HealthCheckReconciler) DeleteServiceAccount(clientset kubernetes.Interface, name string, namespace string) error {
-	_, err := clientset.CoreV1().ServiceAccounts(namespace).Get(name, metav1.GetOptions{})
+	_, err := clientset.CoreV1().ServiceAccounts(namespace).Get(context.TODO(), name, metav1.GetOptions{})
 	// If a service account already exists just re-use it
 	if err != nil {
 		return err
 	}
 
-	err = clientset.CoreV1().ServiceAccounts(namespace).Delete(name, &metav1.DeleteOptions{})
+	err = clientset.CoreV1().ServiceAccounts(namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -1067,12 +1066,12 @@ func (r *HealthCheckReconciler) DeleteServiceAccount(clientset kubernetes.Interf
 
 // create a ClusterRole
 func (r *HealthCheckReconciler) createClusterRole(clientset kubernetes.Interface, clusterrole string) (string, error) {
-	clusrole, err := clientset.RbacV1().ClusterRoles().Get(clusterrole, metav1.GetOptions{})
+	clusrole, err := clientset.RbacV1().ClusterRoles().Get(context.TODO(), clusterrole, metav1.GetOptions{})
 	// If a Cluster Role already exists just re-use it
 	if err == nil {
 		return clusrole.Name, nil
 	}
-	clusrole, err = clientset.RbacV1().ClusterRoles().Create(&rbacv1.ClusterRole{
+	clusrole, err = clientset.RbacV1().ClusterRoles().Create(context.TODO(), &rbacv1.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: clusterrole,
 		},
@@ -1084,7 +1083,7 @@ func (r *HealthCheckReconciler) createClusterRole(clientset kubernetes.Interface
 				Verbs:     []string{"get", "list", "watch"},
 			},
 		},
-	})
+	}, metav1.CreateOptions{})
 
 	if err != nil {
 		return "", err
@@ -1095,12 +1094,12 @@ func (r *HealthCheckReconciler) createClusterRole(clientset kubernetes.Interface
 
 // create a ClusterRole
 func (r *HealthCheckReconciler) createRemedyClusterRole(clientset kubernetes.Interface, clusterrole string) (string, error) {
-	clusrole, err := clientset.RbacV1().ClusterRoles().Get(clusterrole, metav1.GetOptions{})
+	clusrole, err := clientset.RbacV1().ClusterRoles().Get(context.TODO(), clusterrole, metav1.GetOptions{})
 	// If a Cluster Role already exists just re-use it
 	if err == nil {
 		return clusrole.Name, nil
 	}
-	clusrole, err = clientset.RbacV1().ClusterRoles().Create(&rbacv1.ClusterRole{
+	clusrole, err = clientset.RbacV1().ClusterRoles().Create(context.TODO(), &rbacv1.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: clusterrole,
 		},
@@ -1111,7 +1110,7 @@ func (r *HealthCheckReconciler) createRemedyClusterRole(clientset kubernetes.Int
 				Verbs:     []string{"get", "list", "watch", "create", "update", "patch", "delete"},
 			},
 		},
-	})
+	}, metav1.CreateOptions{})
 
 	if err != nil {
 		return "", err
@@ -1122,13 +1121,13 @@ func (r *HealthCheckReconciler) createRemedyClusterRole(clientset kubernetes.Int
 
 // Delete a ClusterRole
 func (r *HealthCheckReconciler) DeleteClusterRole(clientset kubernetes.Interface, clusterrole string) error {
-	_, err := clientset.RbacV1().ClusterRoles().Get(clusterrole, metav1.GetOptions{})
+	_, err := clientset.RbacV1().ClusterRoles().Get(context.TODO(), clusterrole, metav1.GetOptions{})
 	// If a Cluster Role already exists just re-use it
 	if err != nil {
 		return err
 	}
 
-	err = clientset.RbacV1().ClusterRoles().Delete(clusterrole, &metav1.DeleteOptions{})
+	err = clientset.RbacV1().ClusterRoles().Delete(context.TODO(), clusterrole, metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -1138,12 +1137,12 @@ func (r *HealthCheckReconciler) DeleteClusterRole(clientset kubernetes.Interface
 
 // Create NamespaceRole
 func (r *HealthCheckReconciler) createNameSpaceRole(clientset kubernetes.Interface, nsrole string, namespace string) (string, error) {
-	nsrole1, err := clientset.RbacV1().Roles(namespace).Get(nsrole, metav1.GetOptions{})
+	nsrole1, err := clientset.RbacV1().Roles(namespace).Get(context.TODO(), nsrole, metav1.GetOptions{})
 	// If a Namespace Role already exists just re-use it
 	if err == nil {
 		return nsrole1.Name, nil
 	}
-	nsrole1, err = clientset.RbacV1().Roles(namespace).Create(&rbacv1.Role{
+	nsrole1, err = clientset.RbacV1().Roles(namespace).Create(context.TODO(), &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      nsrole,
 			Namespace: namespace,
@@ -1155,7 +1154,7 @@ func (r *HealthCheckReconciler) createNameSpaceRole(clientset kubernetes.Interfa
 				Verbs:     []string{"get", "list", "watch"},
 			},
 		},
-	})
+	}, metav1.CreateOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -1165,12 +1164,12 @@ func (r *HealthCheckReconciler) createNameSpaceRole(clientset kubernetes.Interfa
 
 // Create NamespaceRole
 func (r *HealthCheckReconciler) createRemedyNameSpaceRole(clientset kubernetes.Interface, nsrole string, namespace string) (string, error) {
-	nsrole1, err := clientset.RbacV1().Roles(namespace).Get(nsrole, metav1.GetOptions{})
+	nsrole1, err := clientset.RbacV1().Roles(namespace).Get(context.TODO(), nsrole, metav1.GetOptions{})
 	// If a Namespace Role already exists just re-use it
 	if err == nil {
 		return nsrole1.Name, nil
 	}
-	nsrole1, err = clientset.RbacV1().Roles(namespace).Create(&rbacv1.Role{
+	nsrole1, err = clientset.RbacV1().Roles(namespace).Create(context.TODO(), &rbacv1.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      nsrole,
 			Namespace: namespace,
@@ -1182,7 +1181,7 @@ func (r *HealthCheckReconciler) createRemedyNameSpaceRole(clientset kubernetes.I
 				Verbs:     []string{"get", "list", "watch", "create", "update", "patch", "delete"},
 			},
 		},
-	})
+	}, metav1.CreateOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -1193,12 +1192,12 @@ func (r *HealthCheckReconciler) createRemedyNameSpaceRole(clientset kubernetes.I
 // Delete NamespaceRole
 func (r *HealthCheckReconciler) DeleteNameSpaceRole(clientset kubernetes.Interface, nsrole string, namespace string) error {
 	// Check if a Namespace Role already exists
-	_, err := clientset.RbacV1().Roles(namespace).Get(nsrole, metav1.GetOptions{})
+	_, err := clientset.RbacV1().Roles(namespace).Get(context.TODO(), nsrole, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
 
-	err = clientset.RbacV1().Roles(namespace).Delete(nsrole, &metav1.DeleteOptions{})
+	err = clientset.RbacV1().Roles(namespace).Delete(context.TODO(), nsrole, metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -1208,12 +1207,12 @@ func (r *HealthCheckReconciler) DeleteNameSpaceRole(clientset kubernetes.Interfa
 
 // Create a NamespaceRoleBinding
 func (r *HealthCheckReconciler) createNameSpaceRoleBinding(clientset kubernetes.Interface, rolebinding string, nsrole string, serviceaccount string, namespace string) (string, error) {
-	nsrb, err := clientset.RbacV1().RoleBindings(namespace).Get(rolebinding, metav1.GetOptions{})
+	nsrb, err := clientset.RbacV1().RoleBindings(namespace).Get(context.TODO(), rolebinding, metav1.GetOptions{})
 	// If a Namespace RoleBinding already exists just re-use it
 	if err == nil {
 		return nsrb.Name, nil
 	}
-	nsrb, err = clientset.RbacV1().RoleBindings(namespace).Create(&rbacv1.RoleBinding{
+	nsrb, err = clientset.RbacV1().RoleBindings(namespace).Create(context.TODO(), &rbacv1.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      rolebinding,
 			Namespace: namespace,
@@ -1229,7 +1228,7 @@ func (r *HealthCheckReconciler) createNameSpaceRoleBinding(clientset kubernetes.
 			Name:     nsrole,
 			APIGroup: "rbac.authorization.k8s.io",
 		},
-	})
+	}, metav1.CreateOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -1240,11 +1239,11 @@ func (r *HealthCheckReconciler) createNameSpaceRoleBinding(clientset kubernetes.
 // Delete NamespaceRoleBinding
 func (r *HealthCheckReconciler) DeleteNameSpaceRoleBinding(clientset kubernetes.Interface, rolebinding string, nsrole string, serviceaccount string, namespace string) error {
 	// Check if a Namespace RoleBinding exists
-	_, err := clientset.RbacV1().RoleBindings(namespace).Get(rolebinding, metav1.GetOptions{})
+	_, err := clientset.RbacV1().RoleBindings(namespace).Get(context.TODO(), rolebinding, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
-	err = clientset.RbacV1().RoleBindings(namespace).Delete(rolebinding, &metav1.DeleteOptions{})
+	err = clientset.RbacV1().RoleBindings(namespace).Delete(context.TODO(), rolebinding, metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -1254,12 +1253,12 @@ func (r *HealthCheckReconciler) DeleteNameSpaceRoleBinding(clientset kubernetes.
 
 // Create a ClusterRoleBinding
 func (r *HealthCheckReconciler) createClusterRoleBinding(clientset kubernetes.Interface, clusterrolebinding string, clusterrole string, serviceaccount string, namespace string) (string, error) {
-	crb, err := clientset.RbacV1().ClusterRoleBindings().Get(clusterrolebinding, metav1.GetOptions{})
+	crb, err := clientset.RbacV1().ClusterRoleBindings().Get(context.TODO(), clusterrolebinding, metav1.GetOptions{})
 	// If a Cluster RoleBinding already exists just re-use it
 	if err == nil {
 		return crb.Name, nil
 	}
-	crb, err = clientset.RbacV1().ClusterRoleBindings().Create(&rbacv1.ClusterRoleBinding{
+	crb, err = clientset.RbacV1().ClusterRoleBindings().Create(context.TODO(), &rbacv1.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: clusterrolebinding,
 		},
@@ -1275,7 +1274,7 @@ func (r *HealthCheckReconciler) createClusterRoleBinding(clientset kubernetes.In
 			Name:     clusterrole,
 			APIGroup: "rbac.authorization.k8s.io",
 		},
-	})
+	}, metav1.CreateOptions{})
 	if err != nil {
 		return "", err
 	}
@@ -1287,12 +1286,12 @@ func (r *HealthCheckReconciler) createClusterRoleBinding(clientset kubernetes.In
 // Delete ClusterRoleBinding
 func (r *HealthCheckReconciler) DeleteClusterRoleBinding(clientset kubernetes.Interface, clusterrolebinding string, clusterrole string, serviceaccount string, namespace string) error {
 	// Check if a Cluster RoleBinding exists
-	_, err := clientset.RbacV1().ClusterRoleBindings().Get(clusterrolebinding, metav1.GetOptions{})
+	_, err := clientset.RbacV1().ClusterRoleBindings().Get(context.TODO(), clusterrolebinding, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
 
-	err = clientset.RbacV1().ClusterRoleBindings().Delete(clusterrolebinding, &metav1.DeleteOptions{})
+	err = clientset.RbacV1().ClusterRoleBindings().Delete(context.TODO(), clusterrolebinding, metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
