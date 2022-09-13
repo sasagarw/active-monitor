@@ -38,6 +38,363 @@ spec:
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
+    name: v1
+    schema:
+      openAPIV3Schema:
+        description: HealthCheck is the Schema for the healthchecks API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: HealthCheckSpec defines the desired state of HealthCheck
+              Either RepeatAfterSec or Schedule must be defined for the health check
+              to run
+            properties:
+              cronjobworkflow:
+                description: CronJobWorkflow struct describes a cronjob workflow resource
+                properties:
+                  generateName:
+                    type: string
+                  resource:
+                    description: ResourceObject is the resource object to create on
+                      kubernetes
+                    properties:
+                      activeDeadlineSeconds:
+                        format: int64
+                        type: integer
+                      completions:
+                        format: int32
+                        type: integer
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      namespace:
+                        description: Namespace in which to create this object defaults
+                          to the service account namespace
+                        type: string
+                      parallelism:
+                        format: int32
+                        type: integer
+                      schedule:
+                        description: 'Schedule defines schedule rules to run HealthCheck
+                          cron expressions can be found here: https://godoc.org/github.com/robfig/cron'
+                        type: string
+                      serviceAccount:
+                        type: string
+                      template:
+                        properties:
+                          spec:
+                            properties:
+                              containers:
+                                items:
+                                  properties:
+                                    args:
+                                      items:
+                                        type: string
+                                      type: array
+                                    command:
+                                      items:
+                                        type: string
+                                      type: array
+                                    image:
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                  - args
+                                  - command
+                                  - image
+                                  - name
+                                  type: object
+                                type: array
+                              restartPolicy:
+                                description: RestartPolicy describes how the container
+                                  should be restarted. Only one of the following restart
+                                  policies may be specified. If none of the following
+                                  policies is specified, the default one is RestartPolicyAlways.
+                                type: string
+                              tolerations:
+                                items:
+                                  description: The pod this Toleration is attached
+                                    to tolerates any taint that matches the triple
+                                    <key,value,effect> using the matching operator
+                                    <operator>.
+                                  properties:
+                                    effect:
+                                      description: Effect indicates the taint effect
+                                        to match. Empty means match all taint effects.
+                                        When specified, allowed values are NoSchedule,
+                                        PreferNoSchedule and NoExecute.
+                                      type: string
+                                    key:
+                                      description: Key is the taint key that the toleration
+                                        applies to. Empty means match all taint keys.
+                                        If the key is empty, operator must be Exists;
+                                        this combination means to match all values
+                                        and all keys.
+                                      type: string
+                                    operator:
+                                      description: Operator represents a key's relationship
+                                        to the value. Valid operators are Exists and
+                                        Equal. Defaults to Equal. Exists is equivalent
+                                        to wildcard for value, so that a pod can tolerate
+                                        all taints of a particular category.
+                                      type: string
+                                    tolerationSeconds:
+                                      description: TolerationSeconds represents the
+                                        period of time the toleration (which must
+                                        be of effect NoExecute, otherwise this field
+                                        is ignored) tolerates the taint. By default,
+                                        it is not set, which means tolerate the taint
+                                        forever (do not evict). Zero and negative
+                                        values will be treated as 0 (evict immediately)
+                                        by the system.
+                                      format: int64
+                                      type: integer
+                                    value:
+                                      description: Value is the taint value the toleration
+                                        matches to. If the operator is Exists, the
+                                        value should be empty, otherwise just a regular
+                                        string.
+                                      type: string
+                                  type: object
+                                type: array
+                            required:
+                            - containers
+                            - restartPolicy
+                            type: object
+                        required:
+                        - spec
+                        type: object
+                      ttlSecondsAfterFinished:
+                        format: int32
+                        type: integer
+                    required:
+                    - namespace
+                    - template
+                    type: object
+                  workflowtimeout:
+                    type: integer
+                type: object
+              description:
+                type: string
+              remedyResetInterval:
+                type: integer
+              remedyRunsLimit:
+                type: integer
+              remedyworkflow:
+                description: Workflow struct describes a Remedy workflow
+                properties:
+                  generateName:
+                    type: string
+                  resource:
+                    description: ResourceObject is the resource object to create on
+                      kubernetes
+                    properties:
+                      activeDeadlineSeconds:
+                        format: int64
+                        type: integer
+                      completions:
+                        format: int32
+                        type: integer
+                      labels:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      namespace:
+                        description: Namespace in which to create this object defaults
+                          to the service account namespace
+                        type: string
+                      parallelism:
+                        format: int32
+                        type: integer
+                      schedule:
+                        description: 'Schedule defines schedule rules to run HealthCheck
+                          cron expressions can be found here: https://godoc.org/github.com/robfig/cron'
+                        type: string
+                      serviceAccount:
+                        type: string
+                      template:
+                        properties:
+                          spec:
+                            properties:
+                              containers:
+                                items:
+                                  properties:
+                                    args:
+                                      items:
+                                        type: string
+                                      type: array
+                                    command:
+                                      items:
+                                        type: string
+                                      type: array
+                                    image:
+                                      type: string
+                                    name:
+                                      type: string
+                                  required:
+                                  - args
+                                  - command
+                                  - image
+                                  - name
+                                  type: object
+                                type: array
+                              restartPolicy:
+                                description: RestartPolicy describes how the container
+                                  should be restarted. Only one of the following restart
+                                  policies may be specified. If none of the following
+                                  policies is specified, the default one is RestartPolicyAlways.
+                                type: string
+                              tolerations:
+                                items:
+                                  description: The pod this Toleration is attached
+                                    to tolerates any taint that matches the triple
+                                    <key,value,effect> using the matching operator
+                                    <operator>.
+                                  properties:
+                                    effect:
+                                      description: Effect indicates the taint effect
+                                        to match. Empty means match all taint effects.
+                                        When specified, allowed values are NoSchedule,
+                                        PreferNoSchedule and NoExecute.
+                                      type: string
+                                    key:
+                                      description: Key is the taint key that the toleration
+                                        applies to. Empty means match all taint keys.
+                                        If the key is empty, operator must be Exists;
+                                        this combination means to match all values
+                                        and all keys.
+                                      type: string
+                                    operator:
+                                      description: Operator represents a key's relationship
+                                        to the value. Valid operators are Exists and
+                                        Equal. Defaults to Equal. Exists is equivalent
+                                        to wildcard for value, so that a pod can tolerate
+                                        all taints of a particular category.
+                                      type: string
+                                    tolerationSeconds:
+                                      description: TolerationSeconds represents the
+                                        period of time the toleration (which must
+                                        be of effect NoExecute, otherwise this field
+                                        is ignored) tolerates the taint. By default,
+                                        it is not set, which means tolerate the taint
+                                        forever (do not evict). Zero and negative
+                                        values will be treated as 0 (evict immediately)
+                                        by the system.
+                                      format: int64
+                                      type: integer
+                                    value:
+                                      description: Value is the taint value the toleration
+                                        matches to. If the operator is Exists, the
+                                        value should be empty, otherwise just a regular
+                                        string.
+                                      type: string
+                                  type: object
+                                type: array
+                            required:
+                            - containers
+                            - restartPolicy
+                            type: object
+                        required:
+                        - spec
+                        type: object
+                      ttlSecondsAfterFinished:
+                        format: int32
+                        type: integer
+                    required:
+                    - namespace
+                    - template
+                    type: object
+                  workflowtimeout:
+                    type: integer
+                type: object
+              repeatAfterSec:
+                type: integer
+            required:
+            - cronjobworkflow
+            type: object
+          status:
+            description: HealthCheckStatus defines the observed state of HealthCheck
+            properties:
+              errorMessage:
+                type: string
+              failedCount:
+                type: integer
+              finishedAt:
+                format: date-time
+                type: string
+              lastFailedAt:
+                format: date-time
+                type: string
+              lastFailedWorkflow:
+                type: string
+              lastSuccessfulWorkflow:
+                type: string
+              remedyErrorMessage:
+                type: string
+              remedyFailedCount:
+                type: integer
+              remedyFinishedAt:
+                format: date-time
+                type: string
+              remedyLastFailedAt:
+                format: date-time
+                type: string
+              remedyStatus:
+                type: string
+              remedySuccessCount:
+                type: integer
+              remedyTotalRuns:
+                type: integer
+              remedyTriggeredAt:
+                format: date-time
+                type: string
+              startedAt:
+                format: date-time
+                type: string
+              status:
+                type: string
+              successCount:
+                type: integer
+              totalHealthCheckRuns:
+                type: integer
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}
+  - additionalPrinterColumns:
+    - jsonPath: .status.status
+      name: LATEST STATUS
+      type: string
+    - jsonPath: .status.successCount
+      name: 'SUCCESS CNT  '
+      type: string
+    - jsonPath: .status.failedCount
+      name: FAIL CNT
+      type: string
+    - jsonPath: .status.remedySuccessCount
+      name: 'REMEDY SUCCESS CNT  '
+      type: string
+    - jsonPath: .status.remedyFailedCount
+      name: REMEDY FAIL CNT
+      type: string
+    - jsonPath: .metadata.creationTimestamp
+      name: Age
+      type: date
     name: v1alpha1
     schema:
       openAPIV3Schema:
@@ -216,7 +573,7 @@ spec:
             type: object
         type: object
     served: true
-    storage: true
+    storage: false
     subresources:
       status: {}
 status:

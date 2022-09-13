@@ -232,15 +232,6 @@ func (r *HealthCheckReconciler) processHealthCheck(ctx context.Context, log logr
 	return ctrl.Result{}, nil
 }
 
-// SetupWithManager as used in main package by kubebuilder v2.0.0.alpha4
-func (r *HealthCheckReconciler) SetupWithManager(mgr ctrl.Manager) error {
-	r.kubeclient = kubernetes.NewForConfigOrDie(mgr.GetConfig())
-	return ctrl.NewControllerManagedBy(mgr).
-		For(&activemonitorv1alpha1.HealthCheck{}).
-		WithOptions(controller.Options{MaxConcurrentReconciles: r.MaxParallel}).
-		Complete(r)
-}
-
 func (r *HealthCheckReconciler) createRBACForWorkflow(log logr.Logger, hc *activemonitorv1alpha1.HealthCheck, workFlowType string) error {
 	level := hc.Spec.Level
 	hcSa := hc.Spec.Workflow.Resource.ServiceAccount
@@ -1332,4 +1323,13 @@ func (r *HealthCheckReconciler) GetTimerByName(name string) *time.Timer {
 	s := r.RepeatTimersByName[name]
 	r.TimerLock.RUnlock()
 	return s
+}
+
+// SetupWithManager as used in main package by kubebuilder v2.0.0.alpha4
+func (r *HealthCheckReconciler) SetupWithManager(mgr ctrl.Manager) error {
+	r.kubeclient = kubernetes.NewForConfigOrDie(mgr.GetConfig())
+	return ctrl.NewControllerManagedBy(mgr).
+		For(&activemonitorv1alpha1.HealthCheck{}).
+		WithOptions(controller.Options{MaxConcurrentReconciles: r.MaxParallel}).
+		Complete(r)
 }

@@ -17,8 +17,11 @@ package main
 
 import (
 	"flag"
+	"k8s.io/api/batch/v1"
+	"k8s.io/api/batch/v1beta1"
 	"os"
 
+	activemonitorv1 "github.com/keikoproj/active-monitor/api/v1"
 	activemonitorv1alpha1 "github.com/keikoproj/active-monitor/api/v1alpha1"
 	"github.com/keikoproj/active-monitor/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -36,7 +39,10 @@ var (
 
 func init() {
 
+	activemonitorv1.AddToScheme(scheme)
 	activemonitorv1alpha1.AddToScheme(scheme)
+	v1beta1.AddToScheme(scheme)
+	v1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 }
 
@@ -67,15 +73,24 @@ func main() {
 	if err != nil {
 		setupLog.Error(err, "unable to get dynamic client")
 	}
-	err = (&controllers.HealthCheckReconciler{
+	if err = (&controllers.HealthCheckReconciler{
 		Client:      mgr.GetClient(),
 		DynClient:   dynClient,
 		Recorder:    mgr.GetEventRecorderFor("HealthCheck"),
 		Log:         ctrl.Log.WithName("controllers").WithName("HealthCheck"),
 		MaxParallel: maxParallel,
-	}).SetupWithManager(mgr)
-	if err != nil {
+	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "HealthCheck")
+		os.Exit(1)
+	}
+	if err = (&controllers.HealthCheckReconcilerV1{
+		Client:      mgr.GetClient(),
+		DynClient:   dynClient,
+		Recorder:    mgr.GetEventRecorderFor("HealthCheckV1"),
+		Log:         ctrl.Log.WithName("controllers").WithName("HealthCheckV1"),
+		MaxParallel: maxParallel,
+	}).SetupWithManager(mgr); err != nil {
+		setupLog.Error(err, "unable to create controller", "controller", "HealthCheckV1")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

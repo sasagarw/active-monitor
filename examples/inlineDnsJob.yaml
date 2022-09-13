@@ -1,0 +1,31 @@
+apiVersion: activemonitor.keikoproj.io/v1
+kind: HealthCheck
+metadata:
+  generateName: dns-healthcheck-
+  namespace: health
+spec:
+  repeatAfterSec: 60
+  description: "Monitor pod dns connections"
+  cronjobworkflow:
+    generateName: dns-workflow-
+    resource:
+      namespace: health
+      serviceAccount: activemonitor-controller-sa
+      schedule: "* * * * *"
+      activeDeadlineSeconds: 65
+      ttlSecondsAfterFinished: 180
+      labels:
+        workflows.argoproj.io/controller-instanceid: active-monitor-workflow
+      template:
+        spec:
+          containers:
+            - name: start
+              image: docker.intuit.com/personal/sagarwal23/tutum/dnsutils
+              command: [ sh, -c ]
+              args: [ "nslookup www.google.com" ]
+          tolerations:
+            - effect: NoExecute
+              operator: Exists
+            - effect: NoSchedule
+              operator: Exists
+          restartPolicy: Never

@@ -8,5 +8,5 @@ spec:
     spec:
       containers:
       # Change the value of image field below to your controller image URL
-      - image: keikoproj/active-monitor:latest
+      - image: docker.intuit.com/personal/sagarwal23/active-monitor:latest
         name: manager

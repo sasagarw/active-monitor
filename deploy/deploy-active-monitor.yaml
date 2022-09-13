@@ -1,4 +1,11 @@
 apiVersion: v1
+kind: Namespace
+metadata:
+  name: health
+  annotations:
+    iks.image-policy.k8s.io/allowed-registries: gcr.io,k8s.gcr.io,quay.io,docker.io,docker.intuit.com
+---
+apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: activemonitor-controller-sa
@@ -92,7 +99,7 @@ spec:
     spec:
       containers:
         - name: active-monitor
-          image: keikoproj/active-monitor:latest
+          image: docker.intuit.com/personal/sagarwal23/active-monitor:latest
           imagePullPolicy: Always
           resources:
             requests:
