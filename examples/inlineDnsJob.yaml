@@ -1,5 +1,5 @@
 apiVersion: activemonitor.keikoproj.io/v1
-kind: HealthCheck
+kind: HealthCheckJob
 metadata:
   generateName: dns-healthcheck-
   namespace: health

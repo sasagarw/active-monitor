@@ -49,6 +49,8 @@ rules:
   - events
   - healthchecks
   - healthchecks/status
+  - healthcheckjobs
+  - healthcheckjobs/status
   - serviceaccounts
   - clusterroles
   - clusterrolebindings

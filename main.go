@@ -83,7 +83,7 @@ func main() {
 		setupLog.Error(err, "unable to create controller", "controller", "HealthCheck")
 		os.Exit(1)
 	}
-	if err = (&controllers.HealthCheckReconcilerV1{
+	if err = (&controllers.HealthCheckJobReconciler{
 		Client:      mgr.GetClient(),
 		DynClient:   dynClient,
 		Recorder:    mgr.GetEventRecorderFor("HealthCheckV1"),

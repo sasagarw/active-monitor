@@ -28,8 +28,8 @@ const (
 	hcVersionV1 = "v1"
 )
 
-// HealthCheckReconcilerV1 reconciles a HealthCheck object
-type HealthCheckReconcilerV1 struct {
+// HealthCheckJobReconciler reconciles a HealthCheck object
+type HealthCheckJobReconciler struct {
 	client.Client
 	DynClient          dynamic.Interface
 	Recorder           record.EventRecorder
@@ -40,7 +40,7 @@ type HealthCheckReconcilerV1 struct {
 	TimerLock          sync.RWMutex
 }
 
-func (r *HealthCheckReconcilerV1) Reconcile(req reconcile.Request) (reconcile.Result, error) {
+func (r *HealthCheckJobReconciler) Reconcile(req reconcile.Request) (reconcile.Result, error) {
 	ctx := context.Background()
 	log := r.Log.WithValues(hcKind, req.NamespacedName)
 	log.Info("Starting HealthCheckV1 reconcile for ...")
@@ -50,7 +50,7 @@ func (r *HealthCheckReconcilerV1) Reconcile(req reconcile.Request) (reconcile.Re
 		r.RepeatTimersByName = make(map[string]*time.Timer)
 	}
 
-	var healthCheck = &activemonitorv1.HealthCheck{}
+	var healthCheck = &activemonitorv1.HealthCheckJob{}
 	if err := r.Get(ctx, req.NamespacedName, healthCheck); err != nil {
 		// if our healthcheck was deleted, this Reconcile method is invoked with an empty resource cache
 		// see: https://book.kubebuilder.io/cronjob-tutorial/controller-implementation.html#1-load-the-cronjob-by-name
@@ -68,8 +68,8 @@ func (r *HealthCheckReconcilerV1) Reconcile(req reconcile.Request) (reconcile.Re
 	return r.processOrUpdateHealthCheck(ctx, log, healthCheck)
 }
 
-func (r *HealthCheckReconcilerV1) processOrUpdateHealthCheck(ctx context.Context, log logr.Logger,
-	healthCheck *activemonitorv1.HealthCheck) (ctrl.Result, error) {
+func (r *HealthCheckJobReconciler) processOrUpdateHealthCheck(ctx context.Context, log logr.Logger,
+	healthCheck *activemonitorv1.HealthCheckJob) (ctrl.Result, error) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Info("Error: Panic occurred during execAdd %s/%s due to %s", healthCheck.Name, healthCheck.Namespace, err)
@@ -95,8 +95,8 @@ func (r *HealthCheckReconcilerV1) processOrUpdateHealthCheck(ctx context.Context
 	return ret, procErr
 }
 
-func (r *HealthCheckReconcilerV1) processHealthCheck(ctx context.Context, log logr.Logger,
-	healthCheck *activemonitorv1.HealthCheck) (ctrl.Result, error) {
+func (r *HealthCheckJobReconciler) processHealthCheck(ctx context.Context, log logr.Logger,
+	healthCheck *activemonitorv1.HealthCheckJob) (ctrl.Result, error) {
 	hcSpec := healthCheck.Spec
 	if hcSpec.CronJobWorkflow.Resource != nil {
 		now := metav1.Time{Time: time.Now()}
@@ -157,7 +157,7 @@ func (r *HealthCheckReconcilerV1) processHealthCheck(ctx context.Context, log lo
 // this function exists to assist with how a function called by the timer.AfterFunc() method operates to call a
 // function which takes parameters, it is easiest to build this closure which holds access to the parameters we need.
 // the helper returns a function object taking no parameters directly, this is what we want to give AfterFunc
-func (r *HealthCheckReconcilerV1) createSubmitWorkflowHelper(ctx context.Context, log logr.Logger, jobNamespace string, hc *activemonitorv1.HealthCheck) func() {
+func (r *HealthCheckJobReconciler) createSubmitWorkflowHelper(ctx context.Context, log logr.Logger, jobNamespace string, hc *activemonitorv1.HealthCheckJob) func() {
 	return func() {
 		log.Info("Creating and Submitting Job Workflow...")
 		jobName, err := r.createSubmitWorkflow(ctx, log, hc)
@@ -173,8 +173,8 @@ func (r *HealthCheckReconcilerV1) createSubmitWorkflowHelper(ctx context.Context
 	}
 }
 
-func (r *HealthCheckReconcilerV1) createSubmitWorkflow(ctx context.Context, log logr.Logger,
-	hc *activemonitorv1.HealthCheck) (cjName string, err error) {
+func (r *HealthCheckJobReconciler) createSubmitWorkflow(ctx context.Context, log logr.Logger,
+	hc *activemonitorv1.HealthCheckJob) (cjName string, err error) {
 	job := &v1.Job{
 		TypeMeta: metav1.TypeMeta{
 			Kind: "Job",
@@ -265,7 +265,7 @@ func (r *HealthCheckReconcilerV1) createSubmitWorkflow(ctx context.Context, log 
 	return generatedName, nil
 }
 
-func (r *HealthCheckReconcilerV1) watchWorkflowReschedule(ctx context.Context, req ctrl.Request, log logr.Logger, jobNamespace, jobName string, hc *activemonitorv1.HealthCheck) error {
+func (r *HealthCheckJobReconciler) watchWorkflowReschedule(ctx context.Context, req ctrl.Request, log logr.Logger, jobNamespace, jobName string, hc *activemonitorv1.HealthCheckJob) error {
 	var now metav1.Time
 	then := metav1.Time{Time: time.Now()}
 	repeatAfterSec := hc.Spec.RepeatAfterSec
@@ -423,7 +423,7 @@ func (r *HealthCheckReconcilerV1) watchWorkflowReschedule(ctx context.Context, r
 	return nil
 }
 
-func (r *HealthCheckReconcilerV1) updateHealthCheckStatus(ctx context.Context, log logr.Logger, hc *activemonitorv1.HealthCheck) error {
+func (r *HealthCheckJobReconciler) updateHealthCheckStatus(ctx context.Context, log logr.Logger, hc *activemonitorv1.HealthCheckJob) error {
 	if err := r.Status().Update(ctx, hc); err != nil {
 		log.Error(err, "HealthCheckV1 status could not be updated.")
 		r.Recorder.Event(hc, "Warning", "Failed", fmt.Sprintf("HealthCheck %s/%s status could not be updated. %v", hc.Namespace, hc.Name, err))
@@ -432,7 +432,7 @@ func (r *HealthCheckReconcilerV1) updateHealthCheckStatus(ctx context.Context, l
 	return nil
 }
 
-func (r *HealthCheckReconcilerV1) ContainsEqualFoldSubstring(str, substr string) bool {
+func (r *HealthCheckJobReconciler) ContainsEqualFoldSubstring(str, substr string) bool {
 	x := strings.ToLower(str)
 	y := strings.ToLower(substr)
 	if strings.Contains(x, y) {
@@ -441,14 +441,14 @@ func (r *HealthCheckReconcilerV1) ContainsEqualFoldSubstring(str, substr string)
 	return false
 }
 
-func (r *HealthCheckReconcilerV1) IsStorageError(err error) bool {
+func (r *HealthCheckJobReconciler) IsStorageError(err error) bool {
 	if r.ContainsEqualFoldSubstring(err.Error(), "StorageError: invalid object") {
 		return true
 	}
 	return false
 }
 
-func (r *HealthCheckReconcilerV1) GetTimerByName(name string) *time.Timer {
+func (r *HealthCheckJobReconciler) GetTimerByName(name string) *time.Timer {
 	r.TimerLock.RLock()
 	s := r.RepeatTimersByName[name]
 	r.TimerLock.RUnlock()
@@ -456,10 +456,10 @@ func (r *HealthCheckReconcilerV1) GetTimerByName(name string) *time.Timer {
 }
 
 // SetupWithManager as used in main package by kubebuilder v2.0.0.alpha4
-func (r *HealthCheckReconcilerV1) SetupWithManager(mgr ctrl.Manager) error {
+func (r *HealthCheckJobReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	r.kubeclient = kubernetes.NewForConfigOrDie(mgr.GetConfig())
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&activemonitorv1.HealthCheck{}).
+		For(&activemonitorv1.HealthCheckJob{}).
 		WithOptions(controller.Options{MaxConcurrentReconciles: r.MaxParallel}).
 		Complete(r)
 }

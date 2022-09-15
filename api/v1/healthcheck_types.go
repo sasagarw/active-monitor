@@ -61,8 +61,7 @@ type HealthCheckStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
-// +kubebuilder:storageversion
-// +kubebuilder:resource:path=healthchecks,scope=Namespaced,shortName=hc;hcs
+// +kubebuilder:resource:path=healthcheckjobs,scope=Namespaced,shortName=hcj;hcjs
 // +kubebuilder:printcolumn:name="LATEST STATUS",type=string,JSONPath=`.status.status`
 // +kubebuilder:printcolumn:name="SUCCESS CNT  ",type=string,JSONPath=`.status.successCount`
 // +kubebuilder:printcolumn:name="FAIL CNT",type=string,JSONPath=`.status.failedCount`
@@ -70,8 +69,8 @@ type HealthCheckStatus struct {
 // +kubebuilder:printcolumn:name="REMEDY FAIL CNT",type=string,JSONPath=`.status.remedyFailedCount`
 // +kubebuilder:printcolumn:name="Age",type="date",JSONPath=".metadata.creationTimestamp"
 
-// HealthCheck is the Schema for the healthchecks API
-type HealthCheck struct {
+// HealthCheckJob is the Schema for the healthchecks API
+type HealthCheckJob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
@@ -81,14 +80,14 @@ type HealthCheck struct {
 
 // +kubebuilder:object:root=true
 
-// HealthCheckList contains a list of HealthCheck
-type HealthCheckList struct {
+// HealthCheckJobList contains a list of HealthCheck
+type HealthCheckJobList struct {
 	metav1.TypeMeta `json:",inline"`
 	metav1.ListMeta `json:"metadata,omitempty"`
-	Items           []HealthCheck `json:"items"`
+	Items           []HealthCheckJob `json:"items"`
 }
 
-// Workflow struct describes a Remedy workflow
+// RemedyWorkflow struct describes a Remedy workflow
 type RemedyWorkflow struct {
 	GenerateName string          `json:"generateName,omitempty"`
 	Resource     *ResourceObject `json:"resource,omitempty"`
@@ -141,5 +140,5 @@ type ContainerSpec struct {
 }
 
 func init() {
-	SchemeBuilder.Register(&HealthCheck{}, &HealthCheckList{})
+	SchemeBuilder.Register(&HealthCheckJob{}, &HealthCheckJobList{})
 }
