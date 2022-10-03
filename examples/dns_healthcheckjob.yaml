@@ -1,0 +1,47 @@
+apiVersion: activemonitor.keikoproj.io/v1alpha1
+kind: HealthCheckJob
+metadata:
+  name: dns-healthcheck
+  namespace: health
+  labels:
+    app.kubernetes.io/managed-by: addonmgr.keikoproj.io
+    app.kubernetes.io/version: v0.1.0
+spec:
+  repeatAfterSec: 120
+  description: "Monitor pod dns connections (external idps aws artifactory)"
+  job:
+    generateName: dns-healthcheck-
+    timeout: 60
+    resource:
+      namespace: health
+      serviceAccount: activemonitor-controller-sa
+      schedule: "*/2 * * * *"
+      activeDeadlineSeconds: 90
+      ttlSecondsAfterFinished: 180
+      labels:
+        jobs.keikoproj.io/controller-instanceid: active-monitor-job
+      template:
+        spec:
+          containers:
+            - name: nslookup-external
+              image: docker.intuit.com/dev/patterns/kubernetes/dev/kubectl-awscli:v1.21.10
+              command: [ sh, -c ]
+              args: ["for i in $(seq 1 3); do [ $i -gt 1 ] && sleep 15; output=$(nslookup www.google.com) && s=0 || s=$?; echo \"output: $output\"; if [ \"$s\" -ne 0 ];then echo \"Failed\" > /dev/termination-log;else echo \"Succeeded\" > /dev/termination-log; break; fi; done; (exit $s)"]
+            - name: nslookup-idps
+              image: docker.intuit.com/dev/patterns/kubernetes/dev/kubectl-awscli:v1.21.10
+              command: [ sh, -c ]
+              args: [ "for i in $(seq 1 3); do [ $i -gt 1 ] && sleep 15; output=$(nslookup vkm.ps.idps.a.intuit.com) && s=0 || s=$?; echo \"output: $output\"; if [ \"$s\" -ne 0 ];then echo \"Failed\" > /dev/termination-log;else echo \"Succeeded\" > /dev/termination-log; break; fi; done; (exit $s)" ]
+            - name: nslookup-aws
+              image: docker.intuit.com/dev/patterns/kubernetes/dev/kubectl-awscli:v1.21.10
+              command: [ sh, -c ]
+              args: [ "for i in $(seq 1 3); do [ $i -gt 1 ] && sleep 15; output=$(nslookup s3.amazonaws.com) && s=0 || s=$?; echo \"output: $output\"; if [ \"$s\" -ne 0 ];then echo \"Failed\" > /dev/termination-log;else echo \"Succeeded\" > /dev/termination-log; break; fi; done; (exit $s)" ]
+            - name: nslookup-artifactory
+              image: docker.intuit.com/dev/patterns/kubernetes/dev/kubectl-awscli:v1.21.10
+              command: [ sh, -c ]
+              args: [ "for i in $(seq 1 3); do [ $i -gt 1 ] && sleep 15; output=$(nslookup docker.intuit.com) && s=0 || s=$?; echo \"output: $output\"; if [ \"$s\" -ne 0 ];then echo \"Failed\" > /dev/termination-log;else echo \"Succeeded\" > /dev/termination-log; break; fi; done; (exit $s)" ]
+          tolerations:
+            - effect: NoExecute
+              operator: Exists
+            - effect: NoSchedule
+              operator: Exists
+          restartPolicy: Never
