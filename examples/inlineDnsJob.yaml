@@ -1,4 +1,4 @@
-apiVersion: activemonitor.keikoproj.io/v1
+apiVersion: activemonitor.keikoproj.io/v1alpha1
 kind: HealthCheckJob
 metadata:
   generateName: dns-healthcheck-
@@ -6,8 +6,9 @@ metadata:
 spec:
   repeatAfterSec: 60
   description: "Monitor pod dns connections"
-  cronjobworkflow:
+  job:
     generateName: dns-workflow-
+    timeout: 60
     resource:
       namespace: health
       serviceAccount: activemonitor-controller-sa
@@ -15,7 +16,7 @@ spec:
       activeDeadlineSeconds: 65
       ttlSecondsAfterFinished: 180
       labels:
-        workflows.argoproj.io/controller-instanceid: active-monitor-workflow
+        jobs.keikoproj.io/controller-instanceid: active-monitor-job
       template:
         spec:
           containers:

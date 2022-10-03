@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1
+package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
@@ -26,37 +26,37 @@ import (
 
 // Important: Run "make" to regenerate code after modifying this file
 
-// HealthCheckSpec defines the desired state of HealthCheck
+// HealthCheckJobSpec defines the desired state of HealthCheck
 // Either RepeatAfterSec or Schedule must be defined for the health check to run
-type HealthCheckSpec struct {
-	RepeatAfterSec      int             `json:"repeatAfterSec,omitempty"`
-	Description         string          `json:"description,omitempty"`
-	CronJobWorkflow     CronJobWorkflow `json:"cronjobworkflow"`
-	RemedyWorkflow      RemedyWorkflow  `json:"remedyworkflow,omitempty"`
-	RemedyRunsLimit     int             `json:"remedyRunsLimit,omitempty"`
-	RemedyResetInterval int             `json:"remedyResetInterval,omitempty"`
+type HealthCheckJobSpec struct {
+	RepeatAfterSec      int       `json:"repeatAfterSec,omitempty"`
+	Description         string    `json:"description,omitempty"`
+	Job                 Job       `json:"job"`
+	RemedyJob           RemedyJob `json:"remedyjob,omitempty"`
+	RemedyRunsLimit     int       `json:"remedyRunsLimit,omitempty"`
+	RemedyResetInterval int       `json:"remedyResetInterval,omitempty"`
 }
 
-// HealthCheckStatus defines the observed state of HealthCheck
-type HealthCheckStatus struct {
-	ErrorMessage           string       `json:"errorMessage,omitempty"`
-	RemedyErrorMessage     string       `json:"remedyErrorMessage,omitempty"`
-	StartedAt              *metav1.Time `json:"startedAt,omitempty"`
-	FinishedAt             *metav1.Time `json:"finishedAt,omitempty"`
-	LastFailedAt           *metav1.Time `json:"lastFailedAt,omitempty"`
-	RemedyStartedAt        *metav1.Time `json:"remedyTriggeredAt,omitempty"`
-	RemedyFinishedAt       *metav1.Time `json:"remedyFinishedAt,omitempty"`
-	RemedyLastFailedAt     *metav1.Time `json:"remedyLastFailedAt,omitempty"`
-	LastFailedWorkflow     string       `json:"lastFailedWorkflow,omitempty"`
-	LastSuccessfulWorkflow string       `json:"lastSuccessfulWorkflow,omitempty"`
-	SuccessCount           int          `json:"successCount,omitempty"`
-	FailedCount            int          `json:"failedCount,omitempty"`
-	RemedySuccessCount     int          `json:"remedySuccessCount,omitempty"`
-	RemedyFailedCount      int          `json:"remedyFailedCount,omitempty"`
-	RemedyTotalRuns        int          `json:"remedyTotalRuns,omitempty"`
-	TotalHealthCheckRuns   int          `json:"totalHealthCheckRuns,omitempty"`
-	Status                 string       `json:"status,omitempty"`
-	RemedyStatus           string       `json:"remedyStatus,omitempty"`
+// HealthCheckJobStatus defines the observed state of HealthCheck
+type HealthCheckJobStatus struct {
+	ErrorMessage         string       `json:"errorMessage,omitempty"`
+	RemedyErrorMessage   string       `json:"remedyErrorMessage,omitempty"`
+	StartedAt            *metav1.Time `json:"startedAt,omitempty"`
+	FinishedAt           *metav1.Time `json:"finishedAt,omitempty"`
+	LastFailedAt         *metav1.Time `json:"lastFailedAt,omitempty"`
+	RemedyStartedAt      *metav1.Time `json:"remedyTriggeredAt,omitempty"`
+	RemedyFinishedAt     *metav1.Time `json:"remedyFinishedAt,omitempty"`
+	RemedyLastFailedAt   *metav1.Time `json:"remedyLastFailedAt,omitempty"`
+	LastFailedJob        string       `json:"lastFailedJob,omitempty"`
+	LastSuccessfulJob    string       `json:"lastSuccessfulJob,omitempty"`
+	SuccessCount         int          `json:"successCount,omitempty"`
+	FailedCount          int          `json:"failedCount,omitempty"`
+	RemedySuccessCount   int          `json:"remedySuccessCount,omitempty"`
+	RemedyFailedCount    int          `json:"remedyFailedCount,omitempty"`
+	RemedyTotalRuns      int          `json:"remedyTotalRuns,omitempty"`
+	TotalHealthCheckRuns int          `json:"totalHealthCheckRuns,omitempty"`
+	Status               string       `json:"status,omitempty"`
+	RemedyStatus         string       `json:"remedyStatus,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -74,8 +74,8 @@ type HealthCheckJob struct {
 	metav1.TypeMeta   `json:",inline"`
 	metav1.ObjectMeta `json:"metadata,omitempty"`
 
-	Spec   HealthCheckSpec   `json:"spec,omitempty"`
-	Status HealthCheckStatus `json:"status,omitempty"`
+	Spec   HealthCheckJobSpec   `json:"spec,omitempty"`
+	Status HealthCheckJobStatus `json:"status,omitempty"`
 }
 
 // +kubebuilder:object:root=true
@@ -87,26 +87,26 @@ type HealthCheckJobList struct {
 	Items           []HealthCheckJob `json:"items"`
 }
 
-// RemedyWorkflow struct describes a Remedy workflow
-type RemedyWorkflow struct {
-	GenerateName string          `json:"generateName,omitempty"`
-	Resource     *ResourceObject `json:"resource,omitempty"`
-	Timeout      int             `json:"workflowtimeout,omitempty"`
+// RemedyJob struct describes a Remedy job
+type RemedyJob struct {
+	GenerateName string             `json:"generateName,omitempty"`
+	Resource     *JobResourceObject `json:"resource,omitempty"`
+	Timeout      int                `json:"timeout,omitempty"`
 }
 
-func (w RemedyWorkflow) IsEmpty() bool {
+func (w RemedyJob) IsEmpty() bool {
 	return reflect.DeepEqual(w, RemedyWorkflow{})
 }
 
-// CronJobWorkflow struct describes a cronjob workflow resource
-type CronJobWorkflow struct {
-	GenerateName string          `json:"generateName,omitempty"`
-	Resource     *ResourceObject `json:"resource,omitempty"`
-	Timeout      int             `json:"workflowtimeout,omitempty"`
+// Job struct describes a job resource
+type Job struct {
+	GenerateName string             `json:"generateName,omitempty"`
+	Resource     *JobResourceObject `json:"resource,omitempty"`
+	Timeout      int                `json:"timeout,omitempty"`
 }
 
-// ResourceObject is the resource object to create on kubernetes
-type ResourceObject struct {
+// JobResourceObject is the resource object to create on kubernetes
+type JobResourceObject struct {
 	// Namespace in which to create this object
 	// defaults to the service account namespace
 	Namespace      string `json:"namespace"`
@@ -114,11 +114,11 @@ type ResourceObject struct {
 	// Schedule defines schedule rules to run HealthCheck
 	// cron expressions can be found here: https://godoc.org/github.com/robfig/cron
 	Schedule                string            `json:"schedule,omitempty"`
-	Parallelism             *int32            `json:"parallelism,omitempty"`
-	Completions             *int32            `json:"completions,omitempty"`
 	ActiveDeadlineSeconds   *int64            `json:"activeDeadlineSeconds,omitempty"`
 	TTLSecondsAfterFinished *int32            `json:"ttlSecondsAfterFinished,omitempty"`
+	BackoffLimit            *int32            `json:"backoffLimit,omitempty"`
 	Labels                  map[string]string `json:"labels,omitempty"`
+	Annotations             map[string]string `json:"annotations,omitempty"`
 	Template                TemplateSpec      `json:"template"`
 }
 

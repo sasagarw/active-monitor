@@ -21,7 +21,6 @@ import (
 	"k8s.io/api/batch/v1beta1"
 	"os"
 
-	activemonitorv1 "github.com/keikoproj/active-monitor/api/v1"
 	activemonitorv1alpha1 "github.com/keikoproj/active-monitor/api/v1alpha1"
 	"github.com/keikoproj/active-monitor/controllers"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -39,7 +38,6 @@ var (
 
 func init() {
 
-	activemonitorv1.AddToScheme(scheme)
 	activemonitorv1alpha1.AddToScheme(scheme)
 	v1beta1.AddToScheme(scheme)
 	v1.AddToScheme(scheme)
@@ -86,11 +84,11 @@ func main() {
 	if err = (&controllers.HealthCheckJobReconciler{
 		Client:      mgr.GetClient(),
 		DynClient:   dynClient,
-		Recorder:    mgr.GetEventRecorderFor("HealthCheckV1"),
-		Log:         ctrl.Log.WithName("controllers").WithName("HealthCheckV1"),
+		Recorder:    mgr.GetEventRecorderFor("HealthCheckJob"),
+		Log:         ctrl.Log.WithName("controllers").WithName("HealthCheckJob"),
 		MaxParallel: maxParallel,
 	}).SetupWithManager(mgr); err != nil {
-		setupLog.Error(err, "unable to create controller", "controller", "HealthCheckV1")
+		setupLog.Error(err, "unable to create controller", "controller", "HealthCheckJob")
 		os.Exit(1)
 	}
 	// +kubebuilder:scaffold:builder

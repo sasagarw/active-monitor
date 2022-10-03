@@ -31,6 +31,7 @@ rules:
   - serviceaccounts
   - roles
   - rolebindings
+  - jobs
   verbs:
   - "*"
 ---
@@ -47,6 +48,7 @@ rules:
   - monitors
   - pods
   - events
+  - jobs
   - healthchecks
   - healthchecks/status
   - healthcheckjobs

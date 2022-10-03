@@ -38,7 +38,7 @@ spec:
     - jsonPath: .metadata.creationTimestamp
       name: Age
       type: date
-    name: v1
+    name: v1alpha1
     schema:
       openAPIV3Schema:
         description: HealthCheckJob is the Schema for the healthchecks API
@@ -56,23 +56,29 @@ spec:
           metadata:
             type: object
           spec:
-            description: HealthCheckSpec defines the desired state of HealthCheck
+            description: HealthCheckJobSpec defines the desired state of HealthCheck
               Either RepeatAfterSec or Schedule must be defined for the health check
               to run
             properties:
-              cronjobworkflow:
-                description: CronJobWorkflow struct describes a cronjob workflow resource
+              description:
+                type: string
+              job:
+                description: Job struct describes a job resource
                 properties:
                   generateName:
                     type: string
                   resource:
-                    description: ResourceObject is the resource object to create on
-                      kubernetes
+                    description: JobResourceObject is the resource object to create
+                      on kubernetes
                     properties:
                       activeDeadlineSeconds:
                         format: int64
                         type: integer
-                      completions:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      backoffLimit:
                         format: int32
                         type: integer
                       labels:
@@ -83,9 +89,6 @@ spec:
                         description: Namespace in which to create this object defaults
                           to the service account namespace
                         type: string
-                      parallelism:
-                        format: int32
-                        type: integer
                       schedule:
                         description: 'Schedule defines schedule rules to run HealthCheck
                           cron expressions can be found here: https://godoc.org/github.com/robfig/cron'
@@ -184,28 +187,30 @@ spec:
                     - namespace
                     - template
                     type: object
-                  workflowtimeout:
+                  timeout:
                     type: integer
                 type: object
-              description:
-                type: string
               remedyResetInterval:
                 type: integer
               remedyRunsLimit:
                 type: integer
-              remedyworkflow:
-                description: RemedyWorkflow struct describes a Remedy workflow
+              remedyjob:
+                description: RemedyJob struct describes a Remedy job
                 properties:
                   generateName:
                     type: string
                   resource:
-                    description: ResourceObject is the resource object to create on
-                      kubernetes
+                    description: JobResourceObject is the resource object to create
+                      on kubernetes
                     properties:
                       activeDeadlineSeconds:
                         format: int64
                         type: integer
-                      completions:
+                      annotations:
+                        additionalProperties:
+                          type: string
+                        type: object
+                      backoffLimit:
                         format: int32
                         type: integer
                       labels:
@@ -216,9 +221,6 @@ spec:
                         description: Namespace in which to create this object defaults
                           to the service account namespace
                         type: string
-                      parallelism:
-                        format: int32
-                        type: integer
                       schedule:
                         description: 'Schedule defines schedule rules to run HealthCheck
                           cron expressions can be found here: https://godoc.org/github.com/robfig/cron'
@@ -317,16 +319,16 @@ spec:
                     - namespace
                     - template
                     type: object
-                  workflowtimeout:
+                  timeout:
                     type: integer
                 type: object
               repeatAfterSec:
                 type: integer
             required:
-            - cronjobworkflow
+            - job
             type: object
           status:
-            description: HealthCheckStatus defines the observed state of HealthCheck
+            description: HealthCheckJobStatus defines the observed state of HealthCheck
             properties:
               errorMessage:
                 type: string
@@ -338,9 +340,9 @@ spec:
               lastFailedAt:
                 format: date-time
                 type: string
-              lastFailedWorkflow:
+              lastFailedJob:
                 type: string
-              lastSuccessfulWorkflow:
+              lastSuccessfulJob:
                 type: string
               remedyErrorMessage:
                 type: string
